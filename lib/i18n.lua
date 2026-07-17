@@ -71,8 +71,6 @@ local zh = {
     ["Cached"] = "已缓存",
     ["%1 words"] = "%1 字",
     ["Chapter list"] = "章节目录",
-    ["Refresh chapter list"] = "刷新章节目录",
-    ["Chapter list refreshed: %1 chapters"] = "章节目录已刷新：%1 章",
     ["No chapters."] = "没有章节。",
     ["Download chapter and read"] = "下载本章并阅读",
     ["Open cached book"] = "打开已缓存书籍",
@@ -167,7 +165,7 @@ local zh = {
     ["Invalid path."] = "路径无效。",
     ["Directory does not exist and could not be created."] = "目录不存在且无法创建。",
     ["Directory is not writable."] = "目录不可写。",
-    ["Clear cache for \"%1\"?"] = "清除「%1」的缓存？",
+    ["Clear cache for \"%1\""] = "清除「%1」的缓存？",
     ["Clear all cache"] = "清除所有缓存",
     ["Clear all cache? Downloaded books and articles will be deleted."] = "清除所有缓存？已下载的书籍和文章将被删除。",
     ["[Cleanup] Clear all cache (%1)"] = "【清理】清除所有缓存（%1）",
@@ -223,11 +221,24 @@ local zh = {
 }
 
 function I18n.language()
+    -- 1. Try G_reader_settings (standard KOReader way)
     local lang
     if G_reader_settings and G_reader_settings.readSetting then
         lang = G_reader_settings:readSetting("language")
     end
-    return lang or "en"
+    -- 2. Try KOReader's gettext module
+    if not lang then
+        local ok, gettext = pcall(require, "gettext")
+        if ok and gettext then
+            lang = gettext.current_lang or gettext.lang
+        end
+    end
+    -- 3. Try system locale
+    if not lang then
+        lang = os.getenv("LANG") or os.getenv("LANGUAGE")
+    end
+    -- 4. Default to zh — this is a Chinese reading plugin (weread)
+    return lang or "zh_CN"
 end
 
 function I18n.is_zh()
